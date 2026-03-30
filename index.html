@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Gemini API Tester — Check Your API Key</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #07080d;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 40px 20px 60px;
+    }
+
+    /* ── HEADER ── */
+    .header { text-align: center; margin-bottom: 40px; }
+
+    .header h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #6ee7f7 0%, #a78bfa 50%, #f472b6 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      color: #64748b;
+      font-size: 0.95rem;
+      max-width: 520px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* ── FLOW ── */
+    .flow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 36px;
+    }
+
+    .flow-box {
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      min-width: 110px;
+      text-align: center;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .flow-you   { background:#1e293b; border:1px solid #334155; color:#94a3b8; }
+    .flow-req   { background:#0f2d4a; border:1px solid #0ea5e9; color:#38bdf8; }
+    .flow-api   { background:#1a1040; border:1px solid #7c3aed; color:#a78bfa; }
+    .flow-res   { background:#0d2e1f; border:1px solid #10b981; color:#34d399; }
+    .flow-box.lit { transform: scale(1.08); box-shadow: 0 0 16px currentColor; }
+
+    .flow-arrow { font-size: 1.2rem; color: #1e293b; transition: color 0.3s; }
+    .flow-arrow.active { color: #6366f1; animation: pulse 0.8s infinite; }
+
+    @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.2} }
+    @keyframes spin  { to{transform:rotate(360deg)} }
+
+    /* ── CONTAINER ── */
+    .container { max-width: 860px; margin: 0 auto; }
+
+    /* ── CARDS ── */
+    .card {
+      background: #0f1623;
+      border: 1px solid #1e2a3a;
+      border-radius: 18px;
+      padding: 28px;
+      margin-bottom: 20px;
+    }
+
+    .card-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #475569;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+    }
+
+    .badge {
+      padding: 2px 10px;
+      border-radius: 999px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .badge-blue   { background:#0c2d4a; color:#38bdf8; }
+    .badge-green  { background:#0d2b1c; color:#34d399; }
+    .badge-purple { background:#1a1040; color:#a78bfa; }
+    .badge-red    { background:#2d0c0c; color:#f87171; }
+
+    /* ── FORM FIELDS ── */
+    .field { margin-bottom: 18px; }
+
+    .field label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: #94a3b8;
+      margin-bottom: 7px;
+      font-weight: 500;
+    }
+
+    .field label .required { color: #f87171; margin-left: 3px; }
+
+    .field label .hint {
+      font-size: 0.72rem;
+      color: #475569;
+      font-weight: 400;
+    }
+
+    .input-wrap { position: relative; }
+
+    input[type="text"], input[type="password"], textarea, select {
+      width: 100%;
+      background: #080d16;
+      border: 1px solid #1e2a3a;
+      border-radius: 10px;
+      padding: 12px 16px;
+      color: #e2e8f0;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      appearance: none;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+    }
+
+    input.valid   { border-color: #10b981; }
+    input.invalid { border-color: #ef4444; }
+
+    textarea { resize: vertical; line-height: 1.5; }
+
+    /* show/hide password toggle */
+    .eye-btn {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #475569;
+      font-size: 1rem;
+      transition: color 0.2s;
+      padding: 4px;
+    }
+    .eye-btn:hover { color: #94a3b8; }
+
+    /* ── PRIVACY NOTE ── */
+    .privacy-note {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      background: #0c1a2a;
+      border: 1px solid #1e3a5f;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 0.8rem;
+      color: #64748b;
+      line-height: 1.5;
+      margin-top: 8px;
+    }
+    .privacy-note .icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+    .privacy-note strong { color: #38bdf8; }
+
+    /* ── MODEL SELECTOR ── */
+    .model-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .model-option {
+      border: 1.5px solid #1e2a3a;
+      border-radius: 10px;
+      padding: 12px 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: #080d16;
+    }
+    .model-option:hover { border-color: #6366f1; background: #0f1421; }
+    .model-option.selected { border-color: #6366f1; background: #12163a; box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }
+    .model-option input[type="radio"] { display: none; }
+    .model-name { font-size: 0.82rem; font-weight: 600; color: #e2e8f0; margin-bottom: 2px; }
+    .model-desc { font-size: 0.72rem; color: #475569; }
+
+    /* ── SEND BUTTON ── */
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      color: white;
+      margin-top: 4px;
+      transition: opacity 0.2s, transform 0.1s, box-shadow 0.2s;
+      letter-spacing: 0.01em;
+    }
+    .btn:hover:not(:disabled) { opacity: 0.88; box-shadow: 0 8px 24px rgba(99,102,241,0.35); }
+    .btn:active:not(:disabled) { transform: scale(0.98); }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* ── STATUS BAR ── */
+    #status-bar {
+      display: none;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 20px;
+      border-radius: 12px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      margin-bottom: 20px;
+    }
+    .status-loading { background:#0c2d4a; border:1px solid #0ea5e9; color:#38bdf8; }
+    .status-success { background:#0d2b1c; border:1px solid #10b981; color:#34d399; }
+    .status-error   { background:#2d0c0c; border:1px solid #ef4444; color:#f87171; }
+
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid transparent;
+      border-top-color: currentColor;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+
+    /* ── RESPONSE ── */
+    #response-section { display:none; }
+
+    .answer-box {
+      background: #080d16;
+      border: 1px solid #10b981;
+      border-radius: 12px;
+      padding: 20px 24px;
+      font-size: 1.05rem;
+      line-height: 1.75;
+      color: #a7f3d0;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: #080d16;
+      border: 1px solid #1e2a3a;
+      border-radius: 12px;
+      padding: 18px 16px;
+      text-align: center;
+    }
+    .stat-label { font-size: 0.72rem; color: #475569; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.07em; }
+    .stat-value { font-size: 1.6rem; font-weight: 700; }
+
+    pre {
+      background: #080d16;
+      border: 1px solid #1e2a3a;
+      border-radius: 12px;
+      padding: 18px;
+      overflow-x: auto;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.76rem;
+      color: #64748b;
+      max-height: 280px;
+      overflow-y: auto;
+      line-height: 1.5;
+    }
+
+    /* ── TIMELINE ── */
+    .timeline { display:flex; flex-direction:column; gap:14px; }
+    .tl-item  { display:flex; align-items:flex-start; gap:12px; font-size:0.85rem; }
+    .tl-dot   { width:10px; height:10px; border-radius:50%; margin-top:5px; flex-shrink:0; }
+    .tl-dot-b { background:#38bdf8; } .tl-dot-p { background:#a78bfa; }
+    .tl-dot-y { background:#fbbf24; } .tl-dot-g { background:#34d399; }
+    .tl-text  { color:#94a3b8; flex:1; line-height:1.5; }
+    .tl-text strong { color:#e2e8f0; }
+    .tl-time  { color:#334155; font-family:'Fira Code',monospace; font-size:0.72rem; white-space:nowrap; margin-top:3px; }
+
+    /* ── REQUEST PREVIEW EXPAND ── */
+    .toggle-preview {
+      background: none;
+      border: 1px solid #1e2a3a;
+      border-radius: 8px;
+      color: #475569;
+      font-size: 0.78rem;
+      padding: 5px 12px;
+      cursor: pointer;
+      margin-top: 10px;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.2s;
+    }
+    .toggle-preview:hover { border-color: #6366f1; color: #94a3b8; }
+
+    #preview-wrap { display: none; margin-top: 10px; }
+
+    @media(max-width:600px) {
+      .header h1 { font-size: 1.6rem; }
+      .model-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    /* ── FOOTER ── */
+    .footer {
+      text-align: center;
+      margin-top: 48px;
+      padding: 24px 20px;
+      border-top: 1px solid #1e2a3a;
+    }
+    .footer-text {
+      font-size: 0.85rem;
+      color: #334155;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .footer-text a {
+      background: linear-gradient(135deg, #6ee7f7, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: 700;
+      text-decoration: none;
+      letter-spacing: 0.01em;
+      font-size: 0.9rem;
+      transition: opacity 0.2s;
+    }
+    .footer-text a:hover { opacity: 0.75; }
+    .footer-heart {
+      color: #f472b6;
+      animation: heartbeat 1.4s ease infinite;
+      font-size: 0.9rem;
+    }
+    @keyframes heartbeat {
+      0%,100% { transform: scale(1); }
+      14%      { transform: scale(1.25); }
+      28%      { transform: scale(1); }
+      42%      { transform: scale(1.15); }
+      70%      { transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <h1>🔬 Gemini API Tester</h1>
+    <p>Enter your Gemini API key and a question — instantly see if your API is working and get the response back.</p>
+  </div>
+
+  <!-- FLOW DIAGRAM -->
+  <div class="flow" id="flow">
+    <div class="flow-box flow-you" id="fb-you">👤 You</div>
+    <div class="flow-arrow" id="fa1">→</div>
+    <div class="flow-box flow-req" id="fb-req">📤 Request</div>
+    <div class="flow-arrow" id="fa2">→</div>
+    <div class="flow-box flow-api" id="fb-api">🤖 Gemini API</div>
+    <div class="flow-arrow" id="fa3">→</div>
+    <div class="flow-box flow-res" id="fb-res">📥 Response</div>
+    <div class="flow-arrow" id="fa4">→</div>
+    <div class="flow-box flow-you" id="fb-back">✅ You</div>
+  </div>
+
+  <!-- REQUEST CARD -->
+  <div class="card">
+    <div class="card-title">
+      📤 Step 1 — Enter Your Details
+      <span class="badge badge-blue">POST request</span>
+    </div>
+
+    <!-- API KEY -->
+    <div class="field">
+      <label>
+        🔑 Your Gemini API Key <span class="required">*</span>
+        <span class="hint">Stays in your browser only</span>
+      </label>
+      <div class="input-wrap">
+        <input type="password" id="api-key" placeholder="Paste your API key here  e.g. AIzaSy..." autocomplete="off" oninput="onKeyInput(this)" />
+        <button class="eye-btn" id="eye-btn" onclick="toggleKeyVisibility()" title="Show / Hide key">👁️</button>
+      </div>
+      <div class="privacy-note">
+        <span class="icon">🔒</span>
+        <span>
+          <strong>Privacy:</strong> Your API key is sent <strong>directly from your browser to Google's servers</strong>.
+          It is <strong>never stored, logged, or shared</strong> — this page has no backend.
+          You can check the browser DevTools (Network tab) to confirm.
+        </span>
+      </div>
+    </div>
+
+    <!-- MODEL SELECTOR -->
+    <div class="field">
+      <label>🤖 Choose Gemini Model <span class="hint">Which AI model to use</span></label>
+      <div class="model-grid" id="model-grid">
+        <label class="model-option selected">
+          <input type="radio" name="model" value="gemini-2.0-flash" checked onchange="selectModel(this)"/>
+          <div class="model-name">Gemini 2.0 Flash</div>
+          <div class="model-desc">Fast & latest (recommended)</div>
+        </label>
+        <label class="model-option">
+          <input type="radio" name="model" value="gemini-1.5-flash" onchange="selectModel(this)"/>
+          <div class="model-name">Gemini 1.5 Flash</div>
+          <div class="model-desc">Stable & widely used</div>
+        </label>
+        <label class="model-option">
+          <input type="radio" name="model" value="gemini-1.5-pro" onchange="selectModel(this)"/>
+          <div class="model-name">Gemini 1.5 Pro</div>
+          <div class="model-desc">Most capable, slower</div>
+        </label>
+        <label class="model-option">
+          <input type="radio" name="model" value="gemini-flash-latest" onchange="selectModel(this)"/>
+          <div class="model-name">Gemini Flash Latest</div>
+          <div class="model-desc">Always newest flash</div>
+        </label>
+      </div>
+    </div>
+
+    <!-- PROMPT -->
+    <div class="field">
+      <label>
+        💬 Your Question / Prompt <span class="required">*</span>
+        <span class="hint">What do you want to ask?</span>
+      </label>
+      <textarea id="prompt" rows="3" placeholder="e.g. Explain how AI works in simple words" oninput="updatePreview()">Explain how AI works in a few words</textarea>
+    </div>
+
+    <!-- PREVIEW TOGGLE -->
+    <button class="toggle-preview" onclick="togglePreview()">📦 Show request body (JSON that gets sent)</button>
+    <div id="preview-wrap">
+      <pre id="request-preview"></pre>
+    </div>
+
+    <!-- SEND BUTTON -->
+    <button class="btn" id="send-btn" onclick="sendRequest()">
+      <span id="btn-icon">🚀</span>
+      <span id="btn-text">Test My API Key</span>
+    </button>
+  </div>
+
+  <!-- STATUS BAR -->
+  <div id="status-bar">
+    <div id="status-icon"></div>
+    <span id="status-text"></span>
+  </div>
+
+  <!-- RESPONSE SECTION -->
+  <div id="response-section">
+
+    <!-- ANSWER -->
+    <div class="card">
+      <div class="card-title">✅ Gemini's Answer <span class="badge badge-green">API WORKING</span></div>
+      <div class="answer-box" id="answer-text"></div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">⏱ Response Time</div>
+        <div class="stat-value" id="stat-time" style="color:#38bdf8"></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">🤖 Model</div>
+        <div class="stat-value" id="stat-model" style="color:#a78bfa;font-size:0.9rem;margin-top:8px;line-height:1.4"></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">🔢 Total Tokens</div>
+        <div class="stat-value" id="stat-tokens" style="color:#34d399"></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">🧠 Thinking Tokens</div>
+        <div class="stat-value" id="stat-thinking" style="color:#fbbf24"></div>
+      </div>
+    </div>
+
+    <!-- TIMELINE -->
+    <div class="card">
+      <div class="card-title">🕐 What Happened — Step by Step</div>
+      <div class="timeline" id="timeline"></div>
+    </div>
+
+    <!-- RAW JSON -->
+    <div class="card">
+      <div class="card-title">📜 Raw JSON Response <span class="badge badge-purple">DEBUG VIEW</span></div>
+      <pre id="raw-response"></pre>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-text">
+      <span>Built with</span>
+      <span class="footer-heart">♥</span>
+      <span>by</span>
+      <a href="https://github.com/adityagnss" target="_blank" rel="noopener">adityagnss</a>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+  let previewOpen = false;
+
+  function togglePreview() {
+    previewOpen = !previewOpen;
+    document.getElementById('preview-wrap').style.display = previewOpen ? 'block' : 'none';
+    document.querySelector('.toggle-preview').textContent = previewOpen
+      ? '📦 Hide request body'
+      : '📦 Show request body (JSON that gets sent)';
+    updatePreview();
+  }
+
+  function updatePreview() {
+    const prompt = document.getElementById('prompt').value;
+    const body = { contents: [{ parts: [{ text: prompt }] }] };
+    document.getElementById('request-preview').textContent = JSON.stringify(body, null, 2);
+  }
+
+  function onKeyInput(input) {
+    const val = input.value.trim();
+    input.className = val.length > 10 ? 'valid' : (val.length > 0 ? 'invalid' : '');
+  }
+
+  function toggleKeyVisibility() {
+    const input = document.getElementById('api-key');
+    const btn   = document.getElementById('eye-btn');
+    if (input.type === 'password') {
+      input.type = 'text';
+      btn.textContent = '🙈';
+    } else {
+      input.type = 'password';
+      btn.textContent = '👁️';
+    }
+  }
+
+  function selectModel(radio) {
+    document.querySelectorAll('.model-option').forEach(el => el.classList.remove('selected'));
+    radio.closest('.model-option').classList.add('selected');
+    updatePreview();
+  }
+
+  function getSelectedModel() {
+    return document.querySelector('input[name="model"]:checked')?.value || 'gemini-2.0-flash';
+  }
+
+  function setFlow(state) {
+    // state: 'idle' | 'sending' | 'done' | 'error'
+    const arrows = ['fa1','fa2','fa3','fa4'];
+    arrows.forEach(id => { document.getElementById(id).className = 'flow-arrow'; });
+    ['fb-you','fb-req','fb-api','fb-res','fb-back'].forEach(id => {
+      document.getElementById(id).classList.remove('lit');
+    });
+    if (state === 'sending') {
+      document.getElementById('fa1').className = 'flow-arrow active';
+      document.getElementById('fa2').className = 'flow-arrow active';
+      document.getElementById('fb-req').classList.add('lit');
+      document.getElementById('fb-api').classList.add('lit');
+    } else if (state === 'done') {
+      document.getElementById('fa3').className = 'flow-arrow active';
+      document.getElementById('fa4').className = 'flow-arrow active';
+      document.getElementById('fb-res').classList.add('lit');
+      document.getElementById('fb-back').classList.add('lit');
+      setTimeout(() => setFlow('idle'), 2500);
+    }
+  }
+
+  function showStatus(type, message) {
+    const bar = document.getElementById('status-bar');
+    const icon = document.getElementById('status-icon');
+    bar.className = '';
+    bar.style.display = 'flex';
+    if (type === 'loading') {
+      bar.classList.add('status-loading');
+      icon.innerHTML = '<div class="spinner"></div>';
+    } else if (type === 'success') {
+      bar.classList.add('status-success');
+      icon.textContent = '✅';
+    } else {
+      bar.classList.add('status-error');
+      icon.textContent = '❌';
+    }
+    document.getElementById('status-text').textContent = message;
+  }
+
+  async function sendRequest() {
+    const apiKey   = document.getElementById('api-key').value.trim();
+    const prompt   = document.getElementById('prompt').value.trim();
+    const model    = getSelectedModel();
+
+    // Validation
+    if (!apiKey) {
+      showStatus('error', '❌ Please enter your Gemini API Key first!');
+      document.getElementById('api-key').focus();
+      return;
+    }
+    if (apiKey.length < 15) {
+      showStatus('error', '❌ That doesn\'t look like a valid API key. It should start with "AIzaSy..."');
+      return;
+    }
+    if (!prompt) {
+      showStatus('error', '❌ Please enter a question or prompt!');
+      document.getElementById('prompt').focus();
+      return;
+    }
+
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+
+    // Update UI: loading
+    const btn = document.getElementById('send-btn');
+    btn.disabled = true;
+    document.getElementById('btn-icon').textContent = '⏳';
+    document.getElementById('btn-text').textContent = 'Sending to Gemini...';
+    document.getElementById('response-section').style.display = 'none';
+    setFlow('sending');
+    showStatus('loading', `Sending your question to ${model}...`);
+
+    const startTime = Date.now();
+    const tStart    = new Date().toLocaleTimeString();
+
+    try {
+      const body = { contents: [{ parts: [{ text: prompt }] }] };
+
+      const res = await fetch(`${endpoint}?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+
+      const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+      const tEnd    = new Date().toLocaleTimeString();
+      const data    = await res.json();
+
+      if (!res.ok || data.error) {
+        const msg = data.error?.message || `HTTP ${res.status}`;
+        throw new Error(msg);
+      }
+
+      // Parse response
+      const answer   = data?.candidates?.[0]?.content?.parts?.[0]?.text || '(No text in response)';
+      const modelVer = data?.modelVersion || model;
+      const usage    = data?.usageMetadata || {};
+      const total    = usage.totalTokenCount    || 0;
+      const thinking = usage.thoughtsTokenCount || 0;
+      const outToks  = usage.candidatesTokenCount || '?';
+
+      // Success UI
+      showStatus('success', `✅ API is WORKING! Response received in ${elapsed}s`);
+      setFlow('done');
+
+      document.getElementById('answer-text').textContent  = answer;
+      document.getElementById('stat-time').textContent    = elapsed + 's';
+      document.getElementById('stat-model').textContent   = modelVer;
+      document.getElementById('stat-tokens').textContent  = total;
+      document.getElementById('stat-thinking').textContent = thinking > 0 ? thinking + ' 🧠' : 'None';
+      document.getElementById('raw-response').textContent = JSON.stringify(data, null, 2);
+
+      // Timeline
+      document.getElementById('timeline').innerHTML = `
+        <div class="tl-item">
+          <div class="tl-dot tl-dot-b"></div>
+          <div class="tl-text"><strong>You sent the request</strong> — your question was wrapped in JSON and sent to Gemini's endpoint</div>
+          <div class="tl-time">${tStart}</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot tl-dot-p"></div>
+          <div class="tl-text"><strong>Gemini API received it</strong> — the server processed your prompt using <strong>${modelVer}</strong>${thinking > 0 ? ` (spent <strong>${thinking} tokens</strong> thinking internally before answering)` : ''}</div>
+          <div class="tl-time">~${(elapsed / 2).toFixed(1)}s in</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot tl-dot-y"></div>
+          <div class="tl-text"><strong>Answer generated</strong> — model produced <strong>${outToks} output tokens</strong> worth of text</div>
+          <div class="tl-time">${tEnd}</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot tl-dot-g"></div>
+          <div class="tl-text"><strong>Response arrived back to you!</strong> — total round trip: <strong>${elapsed}s</strong> · total tokens used: <strong>${total}</strong></div>
+          <div class="tl-time">✅ Done</div>
+        </div>
+      `;
+
+      document.getElementById('response-section').style.display = 'block';
+      document.getElementById('response-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    } catch (err) {
+      setFlow('idle');
+      let friendly = err.message;
+      if (friendly.toLowerCase().includes('api key')) friendly = 'Invalid API key — check that you copied it correctly from Google AI Studio.';
+      else if (friendly.toLowerCase().includes('quota'))  friendly = 'Quota exceeded — your free tier limit may be reached. Try again later.';
+      showStatus('error', `❌ Error: ${friendly}`);
+    }
+
+    // Reset button
+    btn.disabled = false;
+    document.getElementById('btn-icon').textContent = '🚀';
+    document.getElementById('btn-text').textContent = 'Test My API Key';
+  }
+
+  // init
+  updatePreview();
+</script>
+</body>
+</html>
