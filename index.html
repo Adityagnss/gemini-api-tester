@@ -635,8 +635,6 @@
       return;
     }
 
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
-
     // Update UI: loading
     const btn = document.getElementById('send-btn');
     btn.disabled = true;
@@ -644,18 +642,18 @@
     document.getElementById('btn-text').textContent = 'Sending to Gemini...';
     document.getElementById('response-section').style.display = 'none';
     setFlow('sending');
-    showStatus('loading', `Sending your question to ${model}...`);
+    showStatus('loading', `⚡ Routing through serverless function → Gemini ${model}...`);
 
     const startTime = Date.now();
     const tStart    = new Date().toLocaleTimeString();
 
     try {
-      const body = { contents: [{ parts: [{ text: prompt }] }] };
-
-      const res = await fetch(`${endpoint}?key=${apiKey}`, {
+      // 📡 Call our Netlify serverless proxy instead of hitting Google directly
+      // Benefit: API key goes in POST body, not as a visible URL ?key= param
+      const res = await fetch('/.netlify/functions/gemini-proxy', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
+        body: JSON.stringify({ apiKey, model, prompt })
       });
 
       const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
