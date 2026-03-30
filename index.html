@@ -656,12 +656,23 @@
         body: JSON.stringify({ apiKey, model, prompt })
       });
 
-      const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
-      const tEnd    = new Date().toLocaleTimeString();
-      const data    = await res.json();
+      const elapsed  = ((Date.now() - startTime) / 1000).toFixed(2);
+      const tEnd     = new Date().toLocaleTimeString();
+
+      // Safely parse — guard against empty / non-JSON response body
+      const rawText = await res.text();
+      if (!rawText || rawText.trim() === '') {
+        throw new Error(`Serverless function returned an empty response (HTTP ${res.status}). The function may not be deployed yet.`);
+      }
+      let data;
+      try {
+        data = JSON.parse(rawText);
+      } catch {
+        throw new Error(`Could not parse response as JSON. Got: ${rawText.slice(0, 120)}`);
+      }
 
       if (!res.ok || data.error) {
-        const msg = data.error?.message || `HTTP ${res.status}`;
+        const msg = data.error?.message || data.error || `HTTP ${res.status}`;
         throw new Error(msg);
       }
 
